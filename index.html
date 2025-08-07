@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Generátor hesel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Generátor hesel</h1>
+        <form id="passwordForm" class="form-box">
+            <!-- Bez ikon v polích! -->
+            <div class="form-row">
+                <input type="text" id="appName" required placeholder="Název aplikace/webu">
+            </div>
+            <div class="form-row">
+                <input type="text" id="username" required placeholder="Username">
+            </div>
+            <div class="form-row">
+                <input type="number" id="length" min="6" value="10" required placeholder="Počet znaků">
+            </div>
+            <div class="options-row">
+                <span>Možnosti hesla:</span>
+                <label class="checkbox-label"><input type="checkbox" id="uppercase" checked> Velká písmena (A-Z)</label>
+                <label class="checkbox-label"><input type="checkbox" id="digits" checked> Číslice (0-9)</label>
+                <label class="checkbox-label"><input type="checkbox" id="special" checked> Speciální znaky (!@#$...)</label>
+            </div>
+            <div class="form-row">
+                <button type="submit" class="btn-main">✨ Vygenerovat heslo</button>
+            </div>
+        </form>
+        <div id="result" class="result" style="display:none;">
+            <div class="generated-label">Vygenerované heslo:</div>
+            <div class="generated-password" id="generatedPassword"></div>
+        </div>
+        
+        <h2>🕒 Historie hesel</h2>
+        <button id="exportCSV" class="btn-secondary">⬇️ Exportovat CSV</button>
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Aplikace/Web</th>
+                    <th>Username</th>
+                    <th>Heslo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Historie se zde zobrazí -->
+            </tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
