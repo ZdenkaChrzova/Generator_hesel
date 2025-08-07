@@ -2,54 +2,159 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Generátor hesel</title>
+    <title>Generátor hesel - Přihlášení</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🔒 Generátor hesel</h1>
-        <form id="passwordForm" class="form-box">
-            <!-- Bez ikon v polích! -->
-            <div class="form-row">
-                <input type="text" id="appName" required placeholder="Název aplikace/webu">
+    <!-- Přihlašovací okno -->
+    <div id="loginBox" class="container">
+        <h1>🔒 Přihlášení</h1>
+        <input type="text" id="loginUser" placeholder="Uživatelské jméno" autocomplete="username" />
+        <input type="password" id="loginPassword" placeholder="Heslo" autocomplete="current-password" />
+        <button id="loginBtn" class="btn-main">Přihlásit se</button>
+        <button id="registerBtn" class="btn-secondary">Zaregistrovat / Nastavit heslo</button>
+        <div id="loginError" style="color: red; margin-top: 10px;"></div>
+    </div>
+    <!-- Okno pro nastavení/změnu hesla -->
+    <div id="setPasswordBox" class="container" style="display:none;">
+        <h1>🔑 Nastavit/změnit heslo</h1>
+        <input type="text" id="setUser" placeholder="Uživatelské jméno" autocomplete="username" />
+        <input type="password" id="setPassword" placeholder="Nové heslo" autocomplete="new-password" />
+        <button id="setPasswordBtn" class="btn-main">Nastavit heslo</button>
+        <button id="backToLogin" class="btn-secondary">Zpět na přihlášení</button>
+        <div id="setPasswordError" style="color: red; margin-top: 10px;"></div>
+    </div>
+    <!-- Hlavní aplikace (skrytá dokud není přihlášení) -->
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <h1>🔒 Generátor hesel</h1>
+            <div id="welcome"></div>
+            <button id="changePwdBtn" class="btn-secondary" style="margin-bottom:20px;">Změnit heslo</button>
+            <form id="passwordForm" class="form-box">
+                <div class="form-row">
+                    <input type="text" id="appName" required placeholder="Název aplikace/webu">
+                </div>
+                <div class="form-row">
+                    <input type="text" id="username" required placeholder="Username">
+                </div>
+                <div class="form-row">
+                    <input type="number" id="length" min="6" value="10" required placeholder="Počet znaků">
+                </div>
+                <div class="options-row">
+                    <span>Možnosti hesla:</span>
+                    <label class="checkbox-label"><input type="checkbox" id="uppercase" checked> Velká písmena (A-Z)</label>
+                    <label class="checkbox-label"><input type="checkbox" id="digits" checked> Číslice (0-9)</label>
+                    <label class="checkbox-label"><input type="checkbox" id="special" checked> Speciální znaky (!@#$...)</label>
+                </div>
+                <div class="form-row">
+                    <button type="submit" class="btn-main">✨ Vygenerovat heslo</button>
+                </div>
+            </form>
+            <div id="result" class="result" style="display:none;">
+                <div class="generated-label">Vygenerované heslo:</div>
+                <div class="generated-password" id="generatedPassword"></div>
             </div>
-            <div class="form-row">
-                <input type="text" id="username" required placeholder="Username">
-            </div>
-            <div class="form-row">
-                <input type="number" id="length" min="6" value="10" required placeholder="Počet znaků">
-            </div>
-            <div class="options-row">
-                <span>Možnosti hesla:</span>
-                <label class="checkbox-label"><input type="checkbox" id="uppercase" checked> Velká písmena (A-Z)</label>
-                <label class="checkbox-label"><input type="checkbox" id="digits" checked> Číslice (0-9)</label>
-                <label class="checkbox-label"><input type="checkbox" id="special" checked> Speciální znaky (!@#$...)</label>
-            </div>
-            <div class="form-row">
-                <button type="submit" class="btn-main">✨ Vygenerovat heslo</button>
-            </div>
-        </form>
-        <div id="result" class="result" style="display:none;">
-            <div class="generated-label">Vygenerované heslo:</div>
-            <div class="generated-password" id="generatedPassword"></div>
+            
+            <h2>🕒 Historie hesel</h2>
+            <button id="exportCSV" class="btn-secondary">⬇️ Exportovat CSV</button>
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Aplikace/Web</th>
+                        <th>Username</th>
+                        <th>Heslo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Historie se zde zobrazí -->
+                </tbody>
+            </table>
         </div>
-        
-        <h2>🕒 Historie hesel</h2>
-        <button id="exportCSV" class="btn-secondary">⬇️ Exportovat CSV</button>
-        <table id="historyTable">
-            <thead>
-                <tr>
-                    <th>Datum</th>
-                    <th>Aplikace/Web</th>
-                    <th>Username</th>
-                    <th>Heslo</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Historie se zde zobrazí -->
-            </tbody>
-        </table>
     </div>
     <script src="script.js"></script>
+    <script>
+    // Uživatelé a hesla jsou uloženy v LocalStorage jako objekt {username: password}
+    function getUsers() {
+        return JSON.parse(localStorage.getItem("users_db") || "{}");
+    }
+    function setUsers(usersObj) {
+        localStorage.setItem("users_db", JSON.stringify(usersObj));
+    }
+    // Aktuálně přihlášený uživatel
+    let currentUser = null;
+
+    // Přihlášení
+    document.getElementById("loginBtn").onclick = function() {
+        const user = document.getElementById("loginUser").value.trim();
+        const pwd = document.getElementById("loginPassword").value;
+        const users = getUsers();
+        if (user in users && users[user] === pwd) {
+            currentUser = user;
+            showMainApp();
+        } else {
+            document.getElementById("loginError").textContent = "Špatné jméno nebo heslo!";
+        }
+    };
+    // Registrace / změna hesla
+    document.getElementById("registerBtn").onclick = function() {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("setPasswordBox").style.display = "block";
+        document.getElementById("setUser").value = document.getElementById("loginUser").value;
+    };
+    document.getElementById("backToLogin").onclick = function() {
+        document.getElementById("setPasswordBox").style.display = "none";
+        document.getElementById("loginBox").style.display = "block";
+    };
+    document.getElementById("setPasswordBtn").onclick = function() {
+        const user = document.getElementById("setUser").value.trim();
+        const pwd = document.getElementById("setPassword").value;
+        if (!user) {
+            document.getElementById("setPasswordError").textContent = "Zadejte jméno!";
+            return;
+        }
+        if (!pwd) {
+            document.getElementById("setPasswordError").textContent = "Zadejte heslo!";
+            return;
+        }
+        const users = getUsers();
+        users[user] = pwd;
+        setUsers(users);
+        document.getElementById("setPasswordError").textContent = "";
+        document.getElementById("setPasswordBox").style.display = "none";
+        document.getElementById("loginBox").style.display = "block";
+        document.getElementById("loginUser").value = user;
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("loginError").textContent = "Heslo nastaveno, můžete se přihlásit.";
+    };
+    // Enter také spustí přihlášení/registraci
+    document.getElementById("loginUser").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+    document.getElementById("loginPassword").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+    document.getElementById("setUser").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") document.getElementById("setPasswordBtn").click();
+    });
+    document.getElementById("setPassword").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") document.getElementById("setPasswordBtn").click();
+    });
+
+    // Změna hesla z hlavní aplikace
+    document.getElementById("changePwdBtn").onclick = function() {
+        document.getElementById("mainApp").style.display = "none";
+        document.getElementById("setPasswordBox").style.display = "block";
+        document.getElementById("setUser").value = currentUser;
+    };
+
+    // Zobrazení hlavní aplikace po přihlášení
+    function showMainApp() {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("setPasswordBox").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        document.getElementById("welcome").textContent = "Přihlášen jako: " + currentUser;
+    }
+    </script>
 </body>
 </html>
